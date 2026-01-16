@@ -1,0 +1,1 @@
+{"root":["./src/app.ts","./src/index.ts","./src/controller/auth-controller.ts","./src/db/config.ts","./src/middleware/auth-middleware.ts","./src/model/user.ts","./src/route/auth-route.ts","./src/utils/google-config.ts"],"version":"5.9.3"}
