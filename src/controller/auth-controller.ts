@@ -10,14 +10,33 @@ export const googleLogin = async (req: Request, res: Response) => {
 
     if (!code) throw new Error("Google code is required");
 
-    const googleRes = await oauth2client.getToken(code as string);
-    oauth2client.setCredentials(googleRes.tokens);
+    const { tokens } = await oauth2client.getToken(code as string);
 
-    const userRes = await axios.get(
-      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`,
+    if (!tokens?.access_token || !tokens?.id_token) {
+      throw new Error("Invalid Google OAuth response");
+    }
+    oauth2client.setCredentials(tokens);
+
+    const ticket = await oauth2client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload?.email || !payload?.email_verified) {
+      throw new Error("Unverified Google account");
+    }
+
+    const { data } = await axios.get(
+      "https://www.googleapis.com/oauth2/v2/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${tokens.access_token}`,
+        },
+      },
     );
 
-    const { email, name, picture } = userRes.data;
+    const { email, name, picture } = data;
 
     console.log(`pic: ${picture}`);
 
@@ -54,7 +73,7 @@ export const googleLogin = async (req: Request, res: Response) => {
     );
 
     return res.status(200).json({
-      message: "Success",
+      message: "Authentication successful",
       token,
       user,
     });
@@ -64,7 +83,7 @@ export const googleLogin = async (req: Request, res: Response) => {
       error?.response?.data || error.message,
     );
     return res.status(500).json({
-      message: "Internal Server Error",
+      message: "Authentication failed",
       error: error?.response?.data || error.message,
     });
   }
@@ -94,4 +113,3 @@ export const getUserProfile = async (req: Request, res: Response) => {
     });
   }
 };
-
