@@ -3,9 +3,12 @@ import { oauth2client } from "../utils/google-config";
 import axios from "axios";
 import { User, UserRole } from "../model/user";
 import jwt, { SignOptions } from "jsonwebtoken";
+import { connectDB } from "../db/config";
 
 export const googleLogin = async (req: Request, res: Response) => {
   try {
+    await connectDB();
+
     const { code } = req.query;
 
     if (!code) throw new Error("Google code is required");
@@ -91,6 +94,9 @@ export const googleLogin = async (req: Request, res: Response) => {
 
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
+
+    await connectDB();
+
     const user = await User.findById(req.user._id);
 
     if (!user) {

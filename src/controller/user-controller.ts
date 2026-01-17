@@ -1,8 +1,11 @@
 import { Request, Response } from "express";
 import { User, UserRole } from "../model/user";
+import { connectDB } from "../db/config";
 
 export const getAllUser = async (req: Request, res: Response) => {
   try {
+    await connectDB();
+
     const users = await User.find().sort({
       createdAt: -1,
     });
@@ -22,6 +25,7 @@ export const getAllUser = async (req: Request, res: Response) => {
 
 export const updateUserRole = async (req: Request, res: Response) => {
   try {
+    await connectDB();
     const { userId } = req.params;
     const { role } = req.body;
 
